@@ -1,0 +1,30 @@
+{
+  "name": "parking-management-system",
+  "version": "1.0.0",
+  "description": "A parking management system built in nodejs with postgres database configured.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inezariane/Parking-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Inezariane/Parking-Management-System/issues"
+  },
+  "homepage": "https://github.com/Inezariane/Parking-Management-System#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pg": "^8.16.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
