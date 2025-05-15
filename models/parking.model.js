@@ -4,10 +4,11 @@ const User = require('./user.model');
 
 const Parking = sequelize.define('Parking', {
   id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  // Plate number
   car_number: {
     type: DataTypes.STRING(20),
     allowNull: false,
@@ -23,6 +24,14 @@ const Parking = sequelize.define('Parking', {
   exit_time: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  user_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
   },
 }, {
   tableName: 'parking_records',
