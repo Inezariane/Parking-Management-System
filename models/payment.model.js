@@ -5,8 +5,8 @@ const Parking = require('./parking.model');
 
 const Payment = sequelize.define('Payment', {
   id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   amount: {
@@ -21,6 +21,22 @@ const Payment = sequelize.define('Payment', {
   payment_time: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  user_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
+  },
+  parking_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: Parking,
+      key: 'id',
+    },
   },
 }, {
   tableName: 'payments',

@@ -10,6 +10,10 @@ const viewPayment = async (req, res) => {
           model: Parking,
           attributes: ['car_number', 'slot_number'],
         },
+        {
+          model: User,
+          attributes: ['username'],
+        },
       ],
     });
     res.json(payments);

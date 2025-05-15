@@ -7,10 +7,12 @@ const { syncModels } = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const parkingRoutes = require('./routes/parking.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const cors = require('cors');
 
 dotenv.config();
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

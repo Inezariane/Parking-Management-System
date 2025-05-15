@@ -1,405 +1,478 @@
 {
-    "openapi": "3.0.0",
-    "info": {
-      "title": "Parking Management System API",
-      "version": "1.0.0",
-      "description": "API for managing parking entries, exits, and payments"
-    },
-    "servers": [
-      {
-        "url": "http://localhost:3000",
-        "description": "Local server"
-      }
-    ],
-    "components": {
-      "securitySchemes": {
-        "bearerAuth": {
-          "type": "http",
-          "scheme": "bearer",
-          "bearerFormat": "JWT"
-        }
-      },
-      "schemas": {
-        "User": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "username": { "type": "string" },
-            "role": { "type": "string", "enum": ["user", "admin"] }
-          }
-        },
-        "AuthResponse": {
-          "type": "object",
-          "properties": {
-            "token": { "type": "string" },
-            "user": { "$ref": "#/components/schemas/User" }
-          }
-        },
-        "Parking": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "car_number": { "type": "string" },
-            "slot_number": { "type": "integer" },
-            "entry_time": { "type": "string", "format": "date-time" },
-            "exit_time": { "type": "string", "format": "date-time", "nullable": true }
-          }
-        },
-        "ParkingExitResponse": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "car_number": { "type": "string" },
-            "slot_number": { "type": "integer" },
-            "entry_time": { "type": "string", "format": "date-time" },
-            "exit_time": { "type": "string", "format": "date-time" },
-            "amount": { "type": "number" }
-          }
-        },
-        "Payment": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "parking_id": { "type": "integer" },
-            "amount": { "type": "number" },
-            "status": { "type": "string", "enum": ["pending", "completed"] },
-            "payment_time": { "type": "string", "format": "date-time", "nullable": true }
-          }
-        },
-        "PaymentWithDetails": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "parking_id": { "type": "integer" },
-            "amount": { "type": "number" },
-            "status": { "type": "string" },
-            "payment_time": { "type": "string", "format": "date-time", "nullable": true },
-            "Parking": {
-              "type": "object",
-              "properties": {
-                "car_number": { "type": "string" },
-                "slot_number": { "type": "integer" }
-              }
-            }
-          }
-        },
-        "PaymentWithUserDetails": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "parking_id": { "type": "integer" },
-            "amount": { "type": "number" },
-            "status": { "type": "string" },
-            "payment_time": { "type": "string", "format": "date-time", "nullable": true },
-            "User": {
-              "type": "object",
-              "properties": {
-                "username": { "type": "string" }
-              }
-            },
-            "Parking": {
-              "type": "object",
-              "properties": {
-                "car_number": { "type": "string" },
-                "slot_number": { "type": "integer" }
-              }
-            }
-          }
-        },
-        "Error": {
-          "type": "object",
-          "properties": {
-            "error": { "type": "string" }
-          }
-        }
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Parking Management System API",
+    "version": "1.0.0",
+    "description": "API for managing parking entries, exits, and payments with admin-only parking actions and user payment handling"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     },
-    "paths": {
-      "/api/auth/register": {
-        "post": {
-          "summary": "Register a new user or admin",
-          "tags": ["Auth"],
-          "requestBody": {
-            "required": true,
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "role": { "type": "string", "enum": ["user", "admin"] },
+          "plate_number": { "type": "string", "nullable": true }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "Parking": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "car_number": { "type": "string" },
+          "slot_number": { "type": "integer" },
+          "entry_time": { "type": "string", "format": "date-time" },
+          "exit_time": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "ParkingWithUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "car_number": { "type": "string" },
+          "slot_number": { "type": "integer" },
+          "entry_time": { "type": "string", "format": "date-time" },
+          "User": {
+            "type": "object",
+            "properties": {
+              "username": { "type": "string" },
+              "plate_number": { "type": "string", "nullable": true }
+            }
+          }
+        }
+      },
+      "ParkingExitResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "car_number": { "type": "string" },
+          "slot_number": { "type": "integer" },
+          "entry_time": { "type": "string", "format": "date-time" },
+          "exit_time": { "type": "string", "format": "date-time" },
+          "amount": { "type": "number", "description": "Amount in RWF (100 RWF per hour)" }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "parking_id": { "type": "string", "format": "uuid" },
+          "amount": { "type": "number", "description": "Amount in RWF" },
+          "status": { "type": "string", "enum": ["pending", "completed"] },
+          "payment_time": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "PaymentWithDetails": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "parking_id": { "type": "string", "format": "uuid" },
+          "amount": { "type": "number", "description": "Amount in RWF" },
+          "status": { "type": "string" },
+          "payment_time": { "type": "string", "format": "date-time", "nullable": true },
+          "Parking": {
+            "type": "object",
+            "properties": {
+              "car_number": { "type": "string" },
+              "slot_number": { "type": "integer" }
+            }
+          },
+          "User": {
+            "type": "object",
+            "properties": {
+              "username": { "type": "string" }
+            }
+          }
+        }
+      },
+      "PaymentWithUserDetails": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "user_id": { "type": "string", "format": "uuid" },
+          "parking_id": { "type": "string", "format": "uuid" },
+          "amount": { "type": "number", "description": "Amount in RWF" },
+          "status": { "type": "string" },
+          "payment_time": { "type": "string", "format": "date-time", "nullable": true },
+          "User": {
+            "type": "object",
+            "properties": {
+              "username": { "type": "string" }
+            }
+          },
+          "Parking": {
+            "type": "object",
+            "properties": {
+              "car_number": { "type": "string" },
+              "slot_number": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user or admin",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "johndoe" },
+                  "password": { "type": "string", "example": "password123" },
+                  "role": { "type": "string", "enum": ["user", "admin"], "example": "user" },
+                  "plate_number": { "type": "string", "example": "RAA212A", "description": "Optional for users, ignored for admins" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Username or plate number already exists",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Registration failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login a user or admin",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "johndoe" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Login failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parking/entry": {
+      "post": {
+        "summary": "Register a car parking entry (admin only)",
+        "tags": ["Parking"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["car_number"],
+                "properties": {
+                  "car_number": { "type": "string", "example": "RAA212A" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Entry registered with assigned slot",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Parking" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid car number or user not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Unpaid dues detected",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to register entry",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parking/exit": {
+      "post": {
+        "summary": "Register a car parking exit (admin only)",
+        "tags": ["Parking"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["car_number"],
+                "properties": {
+                  "car_number": { "type": "string", "example": "RAA212A" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exit registered with payment created (100 RWF per hour)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ParkingExitResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Active parking record not found for this car number",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to register exit",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parking/current": {
+      "get": {
+        "summary": "View all users currently parked (admin only)",
+        "tags": ["Parking"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of currently parked users",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["username", "password"],
-                  "properties": {
-                    "username": { "type": "string", "example": "johndoe" },
-                    "password": { "type": "string", "example": "password123" },
-                    "role": { "type": "string", "enum": ["user", "admin"], "example": "user" }
-                  }
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ParkingWithUser" }
                 }
               }
             }
           },
-          "responses": {
-            "201": {
-              "description": "User registered",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/AuthResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Registration failed",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
+          "500": {
+            "description": "Failed to fetch current parked users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
         }
-      },
-      "/api/auth/login": {
-        "post": {
-          "summary": "Login a user or admin",
-          "tags": ["Auth"],
-          "requestBody": {
-            "required": true,
+      }
+    },
+    "/api/payments/view": {
+      "get": {
+        "summary": "View pending payments for a user",
+        "tags": ["Payments"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of pending payments",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["username", "password"],
-                  "properties": {
-                    "username": { "type": "string", "example": "johndoe" },
-                    "password": { "type": "string", "example": "password123" }
-                  }
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PaymentWithDetails" }
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "Login successful",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/AuthResponse" }
-                }
-              }
-            },
-            "401": {
-              "description": "Invalid credentials",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            },
-            "500": {
-              "description": "Login failed",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
+          "500": {
+            "description": "Failed to fetch payments",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
         }
-      },
-      "/api/parking/entry": {
-        "post": {
-          "summary": "Register a car parking entry",
-          "tags": ["Parking"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
+      }
+    },
+    "/api/payments/pay": {
+      "post": {
+        "summary": "Make a payment for a pending amount",
+        "tags": ["Payments"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["payment_id"],
+                "properties": {
+                  "payment_id": { "type": "string", "format": "uuid", "example": "123e4567-e89b-12d3-a456-426614174000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment completed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Payment" }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Payment failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/all": {
+      "get": {
+        "summary": "View all payments (admin only)",
+        "tags": ["Payments"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all payments",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["car_number", "slot_number"],
-                  "properties": {
-                    "car_number": { "type": "string", "example": "ABC123" },
-                    "slot_number": { "type": "integer", "example": 1 }
-                  }
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PaymentWithUserDetails" }
                 }
               }
             }
           },
-          "responses": {
-            "201": {
-              "description": "Entry registered",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Parking" }
-                }
-              }
-            },
-            "403": {
-              "description": "Unpaid dues detected",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            },
-            "500": {
-              "description": "Failed to register entry",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/parking/exit": {
-        "post": {
-          "summary": "Register a car parking exit",
-          "tags": ["Parking"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
+          "500": {
+            "description": "Failed to fetch payments",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["parking_id"],
-                  "properties": {
-                    "parking_id": { "type": "integer", "example": 1 }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Exit registered",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ParkingExitResponse" }
-                }
-              }
-            },
-            "404": {
-              "description": "Parking record not found or already exited",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            },
-            "500": {
-              "description": "Failed to register exit",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/payments/view": {
-        "get": {
-          "summary": "View pending payments for a user",
-          "tags": ["Payments"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "List of pending payments",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": { "$ref": "#/components/schemas/PaymentWithDetails" }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Failed to fetch payments",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/payments/pay": {
-        "post": {
-          "summary": "Make a payment for a pending amount",
-          "tags": ["Payments"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["payment_id"],
-                  "properties": {
-                    "payment_id": { "type": "integer", "example": 1 }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Payment completed",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Payment" }
-                }
-              }
-            },
-            "404": {
-              "description": "Payment not found",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            },
-            "500": {
-              "description": "Payment failed",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/payments/all": {
-        "get": {
-          "summary": "View all payments (admin only)",
-          "tags": ["Payments"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "List of all payments",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": { "$ref": "#/components/schemas/PaymentWithUserDetails" }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Failed to fetch payments",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/Error" }
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -407,4 +480,4 @@
       }
     }
   }
-  
+}
