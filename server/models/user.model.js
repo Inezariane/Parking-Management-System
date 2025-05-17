@@ -7,28 +7,26 @@ const User = sequelize.define('User', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  username: {
-    type: DataTypes.STRING(50),
-    unique: true,
+  name: {
+    type: DataTypes.STRING,
     allowNull: false,
   },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
   password: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.STRING,
     allowNull: false,
   },
   role: {
-    type: DataTypes.STRING(20),
-    allowNull: false,
+    type: DataTypes.ENUM('user', 'admin'),
     defaultValue: 'user',
-  },
-  plate_number: {
-    type: DataTypes.STRING(20),
-    unique: true,
-    allowNull: true,
   },
 }, {
   tableName: 'users',
-  timestamps: false,
+  timestamps: true
 });
 
 module.exports = User;

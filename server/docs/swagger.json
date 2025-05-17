@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Parking Management System API",
+    "title": "Vehicle Parking Management System API",
     "version": "1.0.0",
-    "description": "API for managing parking entries, exits, and payments with admin-only parking actions and user payment handling"
+    "description": "API for managing users, vehicles, parking slots, slot requests, and action logs with JWT authentication, pagination, search, and email notifications."
   },
   "servers": [
     {
@@ -23,122 +23,69 @@
       "User": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "username": { "type": "string" },
+          "id": { "type": "string", "format":"uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
           "role": { "type": "string", "enum": ["user", "admin"] },
-          "plate_number": { "type": "string", "nullable": true }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "AuthResponse": {
+      "Vehicle": {
         "type": "object",
         "properties": {
-          "token": { "type": "string" },
-          "user": { "$ref": "#/components/schemas/User" }
+          "id": { "type": "string", "format":"uuid" },
+          "plate_number": { "type": "string" },
+          "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"] },
+          "size": { "type": "string", "enum": ["small", "medium", "large"] },
+          "attributes": { "type": "object" },
+          "user_id": { "type": "string", "format":"uuid" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "RegisterResponse": {
+      "ParkingSlot": {
         "type": "object",
         "properties": {
-          "user": { "$ref": "#/components/schemas/User" }
+          "id": { "type": "string", "format":"uuid" },
+          "slot_number": { "type": "string" },
+          "size": { "type": "string", "enum": ["small", "medium", "large"] },
+          "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"] },
+          "status": { "type": "string", "enum": ["available", "unavailable"] },
+          "location": { "type": "string", "enum": ["north", "west", "east", "south"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "Parking": {
+      "SlotRequest": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "car_number": { "type": "string" },
-          "slot_number": { "type": "integer" },
-          "entry_time": { "type": "string", "format": "date-time" },
-          "exit_time": { "type": "string", "format": "date-time", "nullable": true }
+          "id": { "type": "string", "format":"uuid" },
+          "user_id": { "type": "string", "format":"uuid" },
+          "vehicle_id": { "type": "string", "format":"uuid" },
+          "slot_id": { "type": "string", "format":"uuid", "nullable": "true" },
+          "request_status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "ParkingWithUser": {
+      "Log": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "car_number": { "type": "string" },
-          "slot_number": { "type": "integer" },
-          "entry_time": { "type": "string", "format": "date-time" },
-          "User": {
-            "type": "object",
-            "properties": {
-              "username": { "type": "string" },
-              "plate_number": { "type": "string", "nullable": true }
-            }
-          }
+          "id": { "type": "string", "format":"uuid" },
+          "user_id": { "type": "string", "format":"uuid" },
+          "action": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "ParkingExitResponse": {
+      "PaginatedResponse": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "car_number": { "type": "string" },
-          "slot_number": { "type": "integer" },
-          "entry_time": { "type": "string", "format": "date-time" },
-          "exit_time": { "type": "string", "format": "date-time" },
-          "amount": { "type": "number", "description": "Amount in RWF (100 RWF per hour)" }
-        }
-      },
-      "Payment": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "parking_id": { "type": "string", "format": "uuid" },
-          "amount": { "type": "number", "description": "Amount in RWF" },
-          "status": { "type": "string", "enum": ["pending", "completed"] },
-          "payment_time": { "type": "string", "format": "date-time", "nullable": true }
-        }
-      },
-      "PaymentWithDetails": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "parking_id": { "type": "string", "format": "uuid" },
-          "amount": { "type": "number", "description": "Amount in RWF" },
-          "status": { "type": "string" },
-          "payment_time": { "type": "string", "format": "date-time", "nullable": true },
-          "Parking": {
-            "type": "object",
-            "properties": {
-              "car_number": { "type": "string" },
-              "slot_number": { "type": "integer" }
-            }
-          },
-          "User": {
-            "type": "object",
-            "properties": {
-              "username": { "type": "string" }
-            }
-          }
-        }
-      },
-      "PaymentWithUserDetails": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "user_id": { "type": "string", "format": "uuid" },
-          "parking_id": { "type": "string", "format": "uuid" },
-          "amount": { "type": "number", "description": "Amount in RWF" },
-          "status": { "type": "string" },
-          "payment_time": { "type": "string", "format": "date-time", "nullable": true },
-          "User": {
-            "type": "object",
-            "properties": {
-              "username": { "type": "string" }
-            }
-          },
-          "Parking": {
-            "type": "object",
-            "properties": {
-              "car_number": { "type": "string" },
-              "slot_number": { "type": "integer" }
-            }
-          }
+          "totalItems": { "type": "integer" },
+          "currentPage": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "itemsPerPage": { "type": "integer" }
         }
       },
       "Error": {
@@ -146,26 +93,42 @@
         "properties": {
           "error": { "type": "string" }
         }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "msg": { "type": "string" },
+                "param": { "type": "string" },
+                "location": { "type": "string" }
+              }
+            }
+          }
+        }
       }
     }
   },
   "paths": {
-    "/api/auth/register": {
+    "/api/users/register": {
       "post": {
-        "summary": "Register a new user or admin",
-        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "tags": ["Users"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["username", "password"],
+                "required": ["name", "email", "password"],
                 "properties": {
-                  "username": { "type": "string", "example": "johndoe" },
-                  "password": { "type": "string", "example": "password123" },
-                  "role": { "type": "string", "enum": ["user", "admin"], "example": "user" },
-                  "plate_number": { "type": "string", "example": "RAA212A", "description": "Optional for users, ignored for admins" }
+                  "name": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "example": "john@example.com" },
+                  "password": { "type": "string", "example": "password123" }, 
+                  "role": {"type": "string", "example": "user"}
                 }
               }
             }
@@ -173,23 +136,33 @@
         },
         "responses": {
           "201": {
-            "description": "User registered",
+            "description": "User registered successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "User registered successfully" }
+                  }
+                }
               }
             }
           },
           "400": {
-            "description": "Username or plate number already exists",
+            "description": "Invalid input or email already exists",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/ValidationError" },
+                    { "$ref": "#/components/schemas/Error" }
+                  ]
+                }
               }
             }
           },
           "500": {
-            "description": "Registration failed",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -199,19 +172,19 @@
         }
       }
     },
-    "/api/auth/login": {
+    "/api/users/login": {
       "post": {
-        "summary": "Login a user or admin",
-        "tags": ["Auth"],
+        "summary": "Login a user",
+        "tags": ["Users"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["username", "password"],
+                "required": ["email", "password"],
                 "properties": {
-                  "username": { "type": "string", "example": "johndoe" },
+                  "email": { "type": "string", "example": "john@example.com" },
                   "password": { "type": "string", "example": "password123" }
                 }
               }
@@ -223,7 +196,20 @@
             "description": "Login successful",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
               }
             }
           },
@@ -236,7 +222,7 @@
             }
           },
           "500": {
-            "description": "Login failed",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -246,10 +232,10 @@
         }
       }
     },
-    "/api/parking/entry": {
-      "post": {
-        "summary": "Register a car parking entry (admin only)",
-        "tags": ["Parking"],
+    "/api/users/profile": {
+      "put": {
+        "summary": "Update user profile",
+        "tags": ["Users"],
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -257,25 +243,105 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["car_number"],
                 "properties": {
-                  "car_number": { "type": "string", "example": "RAA212A" }
+                  "name": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "example": "john@example.com" },
+                  "password": { "type": "string", "example": "newpassword123" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Entry registered with assigned slot",
+          "200": {
+            "description": "Profile updated successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Parking" }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Profile updated successfully" }
+                  }
+                }
               }
             }
           },
           "400": {
-            "description": "Invalid car number or user not found",
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "List users (admin only)",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Items per page"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": { "type": "string", "default": "" },
+            "description": "Search by name or email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/PaginatedResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/User" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -283,7 +349,7 @@
             }
           },
           "403": {
-            "description": "Unpaid dues detected",
+            "description": "Access denied (non-admin)",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -291,7 +357,7 @@
             }
           },
           "500": {
-            "description": "Failed to register entry",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -301,10 +367,10 @@
         }
       }
     },
-    "/api/parking/exit": {
+    "/api/vehicles": {
       "post": {
-        "summary": "Register a car parking exit (admin only)",
-        "tags": ["Parking"],
+        "summary": "Add a vehicle",
+        "tags": ["Vehicles"],
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -312,9 +378,142 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["car_number"],
+                "required": ["plate_number", "vehicle_type", "size"],
                 "properties": {
-                  "car_number": { "type": "string", "example": "RAA212A" }
+                  "plate_number": { "type": "string", "example": "RAA212A" },
+                  "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"], "example": "car" },
+                  "size": { "type": "string", "enum": ["small", "medium", "large"], "example": "medium" },
+                  "attributes": { "type": "object", "example": { "color": "blue" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vehicle added successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Vehicle" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List vehicles",
+        "tags": ["Vehicles"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Items per page"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": { "type": "string", "default": "" },
+            "description": "Search by plate_number or vehicle_type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of vehicles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/PaginatedResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "vehicles": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Vehicle" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicles/{id}": {
+      "put": {
+        "summary": "Update a vehicle",
+        "tags": ["Vehicles"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Vehicle ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plate_number": { "type": "string", "example": "RAA212A" },
+                  "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"], "example": "car" },
+                  "size": { "type": "string", "enum": ["small", "medium", "large"], "example": "medium" },
+                  "attributes": { "type": "object", "example": { "color": "blue" } }
                 }
               }
             }
@@ -322,15 +521,31 @@
         },
         "responses": {
           "200": {
-            "description": "Exit registered with payment created (100 RWF per hour)",
+            "description": "Vehicle updated successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ParkingExitResponse" }
+                "schema": { "$ref": "#/components/schemas/Vehicle" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           },
           "404": {
-            "description": "Active parking record not found for this car number",
+            "description": "Vehicle not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -338,7 +553,7 @@
             }
           },
           "500": {
-            "description": "Failed to register exit",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -346,55 +561,52 @@
             }
           }
         }
-      }
-    },
-    "/api/parking/current": {
-      "get": {
-        "summary": "View all users currently parked (admin only)",
-        "tags": ["Parking"],
+      },
+      "delete": {
+        "summary": "Delete a vehicle",
+        "tags": ["Vehicles"],
         "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Vehicle ID"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "List of currently parked users",
+            "description": "Vehicle deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ParkingWithUser" }
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Vehicle deleted successfully" }
+                  }
                 }
               }
             }
           },
-          "500": {
-            "description": "Failed to fetch current parked users",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/payments/view": {
-      "get": {
-        "summary": "View pending payments for a user",
-        "tags": ["Payments"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "List of pending payments",
+          },
+          "404": {
+            "description": "Vehicle not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PaymentWithDetails" }
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           },
           "500": {
-            "description": "Failed to fetch payments",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -404,10 +616,10 @@
         }
       }
     },
-    "/api/payments/pay": {
+    "/api/slots/bulk": {
       "post": {
-        "summary": "Make a payment for a pending amount",
-        "tags": ["Payments"],
+        "summary": "Bulk create parking slots (admin only)",
+        "tags": ["ParkingSlots"],
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -415,25 +627,55 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["payment_id"],
                 "properties": {
-                  "payment_id": { "type": "string", "format": "uuid", "example": "123e4567-e89b-12d3-a456-426614174000" }
+                  "slots": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["slot_number", "size", "vehicle_type", "location"],
+                      "properties": {
+                        "slot_number": { "type": "string", "example": "S001" },
+                        "size": { "type": "string", "enum": ["small", "medium", "large"], "example": "medium" },
+                        "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"], "example": "car" },
+                        "location": { "type": "string", "enum": ["north", "west", "east", "south"], "example": "north" }
+                      }
+                    }
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Payment completed",
+          "201": {
+            "description": "Slots created successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Payment" }
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ParkingSlot" }
+                }
               }
             }
           },
-          "404": {
-            "description": "Payment not found",
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied (non-admin)",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -441,7 +683,7 @@
             }
           },
           "500": {
-            "description": "Payment failed",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -451,25 +693,606 @@
         }
       }
     },
-    "/api/payments/all": {
-      "get": {
-        "summary": "View all payments (admin only)",
-        "tags": ["Payments"],
+    "/api/slots/{id}": {
+      "put": {
+        "summary": "Update a parking slot (admin only)",
+        "tags": ["ParkingSlots"],
         "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format":"uuid" },
+            "description": "Slot ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "slot_number": { "type": "string", "example": "S001" },
+                  "size": { "type": "string", "enum": ["small", "medium", "large"], "example": "medium" },
+                  "vehicle_type": { "type": "string", "enum": ["car", "motorcycle", "truck"], "example": "car" },
+                  "location": { "type": "string", "enum": ["north", "west", "east", "south"], "example": "north" }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "List of all payments",
+            "description": "Slot updated successfully",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PaymentWithUserDetails" }
-                }
+                "schema": { "$ref": "#/components/schemas/ParkingSlot" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied (non-admin)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Slot not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           },
           "500": {
-            "description": "Failed to fetch payments",
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a parking slot (admin only)",
+        "tags": ["ParkingSlots"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format":"uuid" },
+            "description": "Slot ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slot deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Slot deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied (non-admin)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Slot not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/slots": {
+      "get": {
+        "summary": "List parking slots",
+        "tags": ["ParkingSlots"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Items per page"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": { "type": "string", "default": "" },
+            "description": "Search by slot_number, vehicle_type, or size"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of slots (users see available, admins see all)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/PaginatedResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "slots": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/ParkingSlot" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests": {
+      "post": {
+        "summary": "Create a slot request",
+        "tags": ["SlotRequests"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["vehicle_id"],
+                "properties": {
+                  "vehicle_id": { "type": "string", "format":"uuid", "example": "123e4567-e89b-12d3-a456-426614174000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Slot request created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SlotRequest" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Vehicle not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List slot requests",
+        "tags": ["SlotRequests"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Items per page"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": { "type": "string", "default": "" },
+            "description": "Search by request_status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of slot requests (users see own, admins see all)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/PaginatedResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "requests": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/SlotRequest" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/{id}": {
+      "put": {
+        "summary": "Update a slot request",
+        "tags": ["SlotRequests"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format":"uuid" },
+            "description": "Request ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "vehicle_id": { "type": "string", "format":"uuid", "example": "123e4567-e89b-12d3-a456-426614174000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Slot request updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SlotRequest" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Request or vehicle not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a slot request",
+        "tags": ["SlotRequests"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format":"uuid" },
+            "description": "Request ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slot request deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Request deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Request not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/{id}/status": {
+      "put": {
+        "summary": "Approve or reject a slot request (admin only)",
+        "tags": ["SlotRequests"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format":"uuid" },
+            "description": "Request ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["request_status"],
+                "properties": {
+                  "request_status": { "type": "string", "enum": ["approved", "rejected"], "example": "approved" },
+                  "slot_id": { "type": "string", "format":"uuid", "description": "Required if request_status is approved" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Slot request status updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SlotRequest" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or slot",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied (non-admin)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Request or slot not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "summary": "List action logs (admin only)",
+        "tags": ["Logs"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "default": 1 },
+            "description": "Page number"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Items per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/PaginatedResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "logs": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Log" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied (non-admin)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

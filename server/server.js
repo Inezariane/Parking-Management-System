@@ -1,12 +1,14 @@
-const express = require('express');
+const express = require('express'); 
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./docs/swagger.json');
 const sequelize = require('./config/db.config');
-const { syncModels } = require('./models');
-const authRoutes = require('./routes/auth.routes');
-const parkingRoutes = require('./routes/parking.routes');
-const paymentRoutes = require('./routes/payment.routes');
+const { syncModels } = require ('./models/index')
+const userRoutes = require('./routes/user.routes');
+const vehicleRoutes = require('./routes/vehicle.routes');
+const slotRoutes = require('./routes/parkingSlot.routes');
+const requestRoutes = require('./routes/slotRequest.routes');
+const logRoutes = require('./routes/log.routes');
+const swaggerDocument = require('./docs/swagger.json')
 const cors = require('cors');
 
 dotenv.config();
@@ -16,9 +18,11 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/api/auth', authRoutes);
-app.use('/api/parking', parkingRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/slots', slotRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/logs', logRoutes);
 
 const startServer = async () => {
   try {

@@ -1,15 +1,19 @@
-const sequelize = require('../config/db.config');
-const User = require('./user.model');
-const Parking = require('./parking.model');
-const Payment = require('./payment.model');
+const sequelize = require ('../config/db.config');
+const ParkingSlot = require ('../models/parkingSlot.model');
+const SlotRequest = require ('../models/slotRequest.model');
+const User = require ('../models/user.model');
+const Vehicle = require ('../models/vehicle.model');
+const Log = require ('../models/log.model');
 
 const syncModels = async () => {
-  await sequelize.sync({ force: false });
-};
+    await sequelize.sync({ force: false });
+  };
 
 module.exports = {
   User,
-  Parking,
-  Payment,
+  ParkingSlot,
+  SlotRequest,
+  Vehicle,
+  Log,
   syncModels,
 };
